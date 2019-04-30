@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
+    <title>蜗牛问卷-管理问题</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="#(basePath)/library/css/bootstrap.min.css"/>
+    <link rel="stylesheet" type="text/css" href="#(basePath)/library/css/sitemain.css"/>
+    <script type="text/javascript" src="#(basePath)/library/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="#(basePath)/library/js/bootstrap.min.js"></script>
+    
+    <script>
+    	function addQuestion(sid) {
+    		if ($.trim($("#title").val()) == "") {
+    			showAlert("错误提示", "题目内容不能为空.");
+    			$("#title").focus();
+    			return;
+    		}
+    		
+    		var param = "sid=" + sid + 
+    					"&title=" + $("#title").val() + 
+    					"&type=" + $("#type").val();
+     		$.post("#(basePath)/question/add", param, function(data) {
+    			if (data == "add-successful") {
+	    			location.href = "#(basePath)/question/"+sid;
+	    		}
+	    		else {
+	    			showAlert("错误提示", "新增题目失败，请联系管理员.");
+	    		}
+    		});
+    	}
+	    
+	    function goEditQuestion(obj, qid) {
+	    	var value = $(obj).html();
+	    	if (value.match("编辑")) {
+		    	$(obj).html("&nbsp;<span class='glyphicon glyphicon-edit'></span>&nbsp;完成&nbsp;");
+		    	$("#question-title-"+qid).css("border", "solid 2px blue");
+		    	$("#question-title-"+qid).attr("contenteditable", true);
+	    	}
+	    	else {
+	    		$(obj).html("&nbsp;<span class='glyphicon glyphicon-edit'></span>&nbsp;编辑&nbsp;");
+	    		$("#question-title-"+qid).css("border", "0");
+		    	$("#question-title-"+qid).attr("contenteditable", false);
+		    	var title = $("#question-title-"+qid).html();
+		    	var param = "qid=" + qid + 
+		    				"&title=" + title;
+		    	$.post("#(basePath)/question/edit", param, function(data) {
+		    		if (data != "edit-successful") {
+		    			showAlert("错误提示", "编辑题目失败，请联系管理员.");
+		    		}
+		    	});
+	    	}
+	    }
+	    
+	    function goAddAnswer(obj, qid) {
+	    	if ($(obj).html().match("添加")) {
+	    		$(obj).html("&nbsp;<span class='glyphicon glyphicon-plus'></span>&nbsp;完成&nbsp;");
+	    		$("#question-add-"+qid).show();
+	    	}
+	    	else {
+	    		$(obj).html("&nbsp;<span class='glyphicon glyphicon-plus'></span>&nbsp;添加&nbsp;");
+	    		$("#question-add-"+qid).hide();
+	    	}
+	    }
+	    
+	    function addAnswer(obj, qid) {
+	    	var index = $(obj).parent().parent().prev().children("div:eq(0)").html();
+	    	if (index.match("题目"))  index = 0;
+	    	index = parseInt(index)+1;
+	    	var content = $("#question-answer-" + qid).val();
+	    	var param = "qid=" + qid +
+	    				"&content=" + content;
+	    	$.post("#(basePath)/answer/add", param, function(data) {
+	    		if (data.match("\\d+")) {
+	    			var output = "";
+	    			output += "<div class='col-lg-12 col-md-12 col-sm-12 col-xs-12' style='margin: 0; padding: 5px;'>";
+	    			output += "<div class='col-lg-2 col-md-2 col-sm-2 col-xs-2' style='text-align: center;'>"+index+"</div>";
+	    			output += "<div class='col-lg-6 col-md-6 col-sm-6 col-xs-6' id='answer-"+ data +"'>"+content+"</div>";
+	    			output += "<div class='col-lg-3 col-md-3 col-sm-3 col-xs-3' style='text-align: center;'>";
+	    			output += "<button class='from-control' onclick='deleteAnswer(this, "+data+")'>&nbsp;<span class='glyphicon glyphicon-remove'></span>&nbsp;删除&nbsp;</button>\n";
+	    			output += "<button class='from-control' onclick='goEditAnswer(this, "+data+")'>&nbsp;<span class='glyphicon glyphicon-edit'></span>&nbsp;编辑&nbsp;</button>";
+	    			output += "</div>";
+	    			output += "<div class='col-lg-1 col-md-1 col-sm-1 col-xs-1' style='text-align: center;'></div>";
+	    			output += "</div>";
+	    			$(obj).parent().parent().before(output);
+	    		}
+	    		else {
+	    			showAlert("错误提示", "新增答案失败，请联系管理员.");
+	    		}
+	    	});
+	    }
+	    
+	    function goEditAnswer(obj, aid) {
+	    	if ($(obj).html().match("编辑")) {
+	    		$(obj).html("&nbsp;<span class='glyphicon glyphicon-plus'></span>&nbsp;完成&nbsp;");
+	    		$("#answer-"+aid).css("border", "solid 2px blue");
+		    	$("#answer-"+aid).attr("contenteditable", true);
+	    	}
+	    	else {
+	    		$(obj).html("&nbsp;<span class='glyphicon glyphicon-plus'></span>&nbsp;编辑&nbsp;");
+	    		$("#answer-"+aid).css("border", "0");
+		    	$("#answer-"+aid).attr("contenteditable", false);
+		    	var content = $("#answer-"+aid).html();
+		    	var param = "aid=" + aid + 
+		    				"&content=" + content;
+		    	$.post("#(basePath)/answer/edit", param, function(data) {
+		    		if (data != "edit-successful") {
+		    			showAlert("错误提示", "编辑题目失败，请联系管理员.");
+		    		}
+		    	});
+	    	}
+	    }
+	    
+	    function deleteAnswer(obj, aid) {
+	    	var confirm = window.confirm("你是否确定删除本答案选项？");
+	    	if (!confirm) {
+	    		return;
+	    	}
+	    	
+	    	$.post("#(basePath)/answer/delete", "aid="+aid, function(data) {
+	    		if (data == "delete-successful") {
+	    			$(obj).parent().parent().remove();
+	    		}
+	    		else if (data == "delete-failed") {
+	    			showAlert("错误提示", "删除答案失败，请联系管理员.");
+	    		}
+	    		else if (data == "cannot-delete") {
+	    			showAlert("错误提示", "不能删除已经有调查结果的答案.");
+	    		}
+	    	});
+	    }
+	    
+	    function viewResult(sid) {
+	    	location.href="#(basePath)/result/" + sid;
+	    }
+	    
+	    function goCopySurvey() {
+	    	$('#mymodal').modal('show');
+	    }
+	    
+	    function doCopySurvey(sid) {
+	    	var param = "sid=" + sid +
+	    				"&branch=" + $("#branch").val() + 
+	    				"&classid=" + $("#classid").val();
+	    	$.post("#(basePath)/survey/copy", param, function(data) {
+	    		if (data == "copy-successful") {
+	    			location.href="#(basePath)/survey";
+	    		}
+	    		else {
+	    			showAlert("错误提示", "复制问卷失败，请联系管理员.");
+	    		}
+	    	});
+	    }
+    </script>
+</head>
+<body>
+
+#include("header.html")
+
+<div class="container">
+    <div class="row">
+        <!-- 问卷信息 -->
+        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="padding: 20px; margin-bottom: 20px; background-color: whitesmoke;">
+       		<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2" style="text-align: center; font-weight: bold;">问卷：#(survey.sid)</div>
+       		<div class="col-lg-5 col-md-5 col-sm-5 col-xs-5">
+       			#(survey.branch)校区-#(survey.classid)-#(survey.createtime)-调查问卷&nbsp;&nbsp;&nbsp;&nbsp;
+       			<a href="#(basePath)/#(survey.sid)" target="_blank">[预览问卷]</a>
+       		</div>
+       		<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2" style="text-align: right;">
+       			#if (survey.status == 1) <span style="color: green">进行中</span>
+       			#else <span style="color: red">已停止</span>
+       			#end
+       		</div>
+       		<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3" style="text-align: center;">
+       			<button class="from-control btn-primary" onclick="viewResult(#(survey.sid))">&nbsp;<span class="glyphicon glyphicon-search"></span>&nbsp;结果&nbsp;</button>
+       			<button class="from-control btn-primary" onclick="goCopySurvey(#(survey.sid))">&nbsp;<span class="glyphicon glyphicon-copy"></span>&nbsp;复制&nbsp;</button>
+       		</div>
+        </div>
+        <!-- 问卷信息 -->
+        
+        <!-- 题目信息 -->
+        #set(index1=1)
+        #for(question: questionList)
+        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="padding: 20px; margin-bottom: 20px; background-color: whitesmoke;">
+        	<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="margin: 0; padding: 0">
+	        	<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2" style="text-align: center; font-weight: bold;">题目：#(index1++)</div>
+	        	<div class="col-lg-5 col-md-5 col-sm-5 col-xs-5" id="question-title-#(question.qid)">#(question.title)</div>
+	        	<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2" style="text-align: right;">
+	        		#(question.type)
+	        	</div>
+	       		<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3" style="text-align: center;">
+	       			#if(question.type=="简答题")
+	       			<button class="from-control btn-primary" disabled="disabled">&nbsp;<span class="glyphicon glyphicon-plus"></span>&nbsp;添加&nbsp;</button>
+	       			#else
+	       			<button class="from-control btn-primary" onclick="goAddAnswer(this, #(question.qid))">&nbsp;<span class="glyphicon glyphicon-plus"></span>&nbsp;添加&nbsp;</button>
+	       			#end
+	       			<button class="from-control btn-primary" onclick="goEditQuestion(this, #(question.qid))">&nbsp;<span class="glyphicon glyphicon-edit"></span>&nbsp;编辑&nbsp;</button>
+	       		</div>
+       		</div>
+       		#set(index2=1)
+       		#for(answer: question.answerList)
+       		<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="margin: 0; padding: 5px;">
+       			<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2" style="text-align: center;">#(index2++)</div>
+       			#if(answer.content=="#textarea#")
+       			<div class="col-lg-7 col-md-7 col-sm-7 col-xs-7"><textarea style="width: 100%; height: 50px;"></textarea></div>
+       			<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3" style="text-align: center;"></div>
+       			#else
+       			<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6" id="answer-#(answer.aid)">#(answer.content)</div>
+       			<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3" style="text-align: center;">
+	       			<button class="from-control" onclick="deleteAnswer(this, #(answer.aid))">&nbsp;<span class="glyphicon glyphicon-remove"></span>&nbsp;删除&nbsp;</button>
+	       			<button class="from-control" onclick="goEditAnswer(this, #(answer.aid))">&nbsp;<span class="glyphicon glyphicon-edit"></span>&nbsp;编辑&nbsp;</button>
+	       		</div>
+	       		#end
+	        	<div class="col-lg-1 col-md-1 col-sm-1 col-xs-1" style="text-align: center;"></div>
+       		</div>
+       		#end
+       		
+       		<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="margin: 0; padding: 0 10px; display: none" id="question-add-#(question.qid)">
+	        	<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2"></div>
+	        	<div class="col-lg-5 col-md-5 col-sm-5 col-xs-5">
+	        		<input type="text" placeholder="请在此输入答案选项." class="form-control" id="question-answer-#(question.qid)" />
+	        	</div>
+	        	<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3" style="text-align: right;">
+	        		<button class="form-control btn-primary" onclick="addAnswer(this, #(question.qid))">&nbsp;<span class="glyphicon glyphicon-plus"></span>&nbsp;新增答案&nbsp;</button>
+	        	</div>
+	       		<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2"></div>
+       		</div>
+        </div>
+        #end
+        <!-- 题目信息 -->
+        
+        <!-- 新增问卷 -->
+        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="padding: 20px; background-color: whitesmoke;">
+        	<div class="col-lg-2 col-md-2 col-sm-3 col-xs-3" style="text-align:center">
+        		<label for="title">题目内容：</label>
+        	</div>
+        	<div class="col-lg-4 col-md-4 col-sm-9 col-xs-9">
+        		<input type="text" placeholder="请在此输入题目内容." class="form-control" id="title"/>
+        	</div>
+        	<div class="col-lg-2 col-md-2 col-sm-3 col-xs-3" style="text-align:center">
+        		<label for="type">题目类型：</label>
+        	</div>
+        	<div class="col-lg-2 col-md-2 col-sm-3 col-xs-3">
+        		<select class="form-control" id="type">
+        			<option value="单选题">单选题</option>
+        			<option value="多选题">多选题</option>
+        			<option value="简答题">简答题</option>
+        		</select>
+        	</div>
+        	
+        	<div class="col-lg-2 col-md-2 col-sm-6 col-xs-6">
+        		<button class="form-control btn-primary" onclick="addQuestion(#(survey.sid))"><span class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;新增题目</button>
+        	</div>
+       	</div>
+       	<!-- 新增问卷 -->
+    </div>
+</div>
+
+<!-- 复制问卷 -->
+<div class="modal fade" id="mymodal" tabindex="-1" role="dialog" aria-labelledby="copySurveyLabel" data-backdrop="false">
+    <div class="modal-dialog" role="document" style="width: 600px;">
+        <div class="modal-content" style="padding: 0px 20px;">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="weCodeLabel">请选择目标校区和班级进行问卷快速复制.</h4>
+            </div>
+            <div class="modal-body">
+            	<br>
+                <label for="branch">校区：</label>
+                <select class="form-control" id="branch" onchange="fillClass()">
+        			#if(session != null && session.username == "admin")
+        				<option value="" selected="selected"></option>
+        			#else
+        				<option value=""></option>
+        			#end
+        			
+        			#if(session != null && session.username == "chengdu")
+        				<option value="成都" selected="selected">成都校区</option>
+        			#else
+        				<option value="成都">成都校区</option>
+        			#end
+        			
+        			#if(session != null && session.username == "chongqing")
+	        			<option value="重庆" selected="selected">重庆校区</option>
+	        		#else
+	        			<option value="重庆">重庆校区</option>
+	        		#end
+	        		
+	        		#if(session != null && session.username == "xian")
+	        			<option value="西安" selected="selected">西安校区</option>
+	        		#else
+	        			<option value="西安">西安校区</option>
+	        		#end
+	        		
+	        		#if(session != null && session.username == "shanghai")
+	        			<option value="上海" selected="selected">上海校区</option>
+	        		#else
+	        			<option value="上海">上海校区</option>
+	        		#end
+        		</select>
+        		<br>
+        		<label for="classid">班级：</label>
+        		<select class="form-control" id="classid"></select>
+        		<br>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" onclick="doCopySurvey(#(survey.sid))">复制</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+#include("footer.html")
+
+</body>
+</html>

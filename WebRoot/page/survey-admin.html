@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
+    <title>蜗牛问卷-管理问卷</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="#(basePath)/library/css/bootstrap.min.css"/>
+    <link rel="stylesheet" type="text/css" href="#(basePath)/library/css/sitemain.css"/>
+    <script type="text/javascript" src="#(basePath)/library/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="#(basePath)/library/js/bootstrap.min.js"></script>
+    
+    <script>
+	       
+	    function addSurvey() {
+	    	if ($("#branch").val() == "" || $("#classid").val() == "") {
+	    		showAlert("错误提示", "请选择校区和班级后方可新增问卷.");
+	    		return;
+	    	}
+	    	
+	    	var param = "branch=" + $("#branch").val() +
+           		 		"&classid=" + $("#classid").val();
+	    	$.post("#(basePath)/survey/add", param, function(data) {
+	    		if (data == "add-successful") {
+	    			location.href = "#(basePath)/survey"
+	    		}
+	    		else {
+	    			showAlert("错误提示", "新增问卷失败，请联系管理员.");
+	    		}
+	    	});
+	    }
+	    
+	    function closeSurvey(sid) {
+	    	$.post("#(basePath)/survey/close", "sid=" + sid, function(data) {
+	    		if (data == "close-successful") {
+	    			location.href = "#(basePath)/survey"
+	    		}
+	    		else {
+	    			showAlert("错误提示", "关闭问卷失败，请联系管理员.");
+	    		}
+	    	});
+	    }
+	    
+	    function startSurvey(sid) {
+	    	$.post("#(basePath)/survey/start", "sid=" + sid, function(data) {
+	    		if (data == "start-successful") {
+	    			location.href = "#(basePath)/survey"
+	    		}
+	    		else {
+	    			showAlert("错误提示", "启用问卷失败，请联系管理员.");
+	    		}
+	    	});
+	    }
+	    
+	    function goEditSurvey(sid) {
+	    	location.href = "#(basePath)/question/" + sid;
+	    }
+    </script>
+</head>
+<body>
+
+#include("header.html")
+
+<div class="container">
+    <div class="row">
+    
+    	<!-- 新增问卷 -->
+        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="padding: 20px; background-color: whitesmoke;">
+        	<div class="col-lg-2 col-md-2 col-sm-3 col-xs-3" style="text-align:center">
+        		<label for="branch">校区：</label>
+        	</div>
+        	<div class="col-lg-2 col-md-2 col-sm-3 col-xs-3">
+        		<select class="form-control" id="branch" onchange="fillClass()">
+        			#if(session != null && session.username == "admin")
+        				<option value="全国" selected="selected">全国校区</option>
+        			#else
+        				<option value="全国">全国校区</option>
+        			#end
+        			
+        			#if(session != null && session.username == "chengdu")
+        				<option value="成都" selected="selected">成都校区</option>
+        			#else
+        				<option value="成都">成都校区</option>
+        			#end
+        			
+        			#if(session != null && session.username == "chongqing")
+	        			<option value="重庆" selected="selected">重庆校区</option>
+	        		#else
+	        			<option value="重庆">重庆校区</option>
+	        		#end
+	        		
+	        		#if(session != null && session.username == "xian")
+	        			<option value="西安" selected="selected">西安校区</option>
+	        		#else
+	        			<option value="西安">西安校区</option>
+	        		#end
+	        		
+	        		#if(session != null && session.username == "shanghai")
+	        			<option value="上海" selected="selected">上海校区</option>
+	        		#else
+	        			<option value="上海">上海校区</option>
+	        		#end
+        		</select>
+        	</div>
+        	<div class="col-lg-2 col-md-2 col-sm-3 col-xs-3" style="text-align: center">
+        		<label for="classid">班级：</label>
+        	</div>
+        	<div class="col-lg-2 col-md-2 col-sm-3 col-xs-3">
+        		<select class="form-control" id="classid"></select>
+        	</div>
+        	<div class="col-lg-1 col-md-1 col-sm-6 col-xs-6"></div>
+        	<div class="col-lg-3 col-md-3 col-sm-6 col-xs-6" style="text-align: center">
+        		<button class="form-control btn-primary" onclick="addSurvey()"><span class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;新增问卷</button>
+        	</div>
+       	</div>
+       	<!-- 新增问卷 -->
+    	
+        <!-- 问卷列表 -->
+        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="padding: 20px; margin: 20px 0px; background-color: whitesmoke;">
+        	#for(survey : surveyList)
+        		<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2" style="text-align: center; font-weight: bold;">编号：#(survey.sid)</div>
+        		<div class="col-lg-5 col-md-5 col-sm-5 col-xs-5">
+        			#(survey.branch)校区-#(survey.classid)-#(survey.createtime)-调查问卷
+        		</div>
+        		<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2" style="text-align: right;">
+        			#if (survey.status == 1) <span style="color: green">进行中</span>
+        			#else <span style="color: red">已停止</span>
+        			#end
+        		</div>
+        		<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3" style="text-align: center;">
+        			#if (survey.status == 1)
+        			<button class="from-control btn-primary" onclick="closeSurvey(#(survey.sid))">&nbsp;<span class="glyphicon glyphicon-off"></span>&nbsp;关闭&nbsp;</button>
+        			#else
+        			<button class="from-control btn-primary" onclick="startSurvey(#(survey.sid))">&nbsp;<span class="glyphicon glyphicon-play"></span>&nbsp;启用&nbsp;</button>
+        			#end
+        			<button class="from-control btn-primary" onclick="goEditSurvey(#(survey.sid))">&nbsp;<span class="glyphicon glyphicon-edit"></span>&nbsp;编辑&nbsp;</button>
+        		</div>
+        		<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12"><hr/></div>
+        	#end
+        </div>
+        <!-- 问卷列表 -->
+
+    </div>
+</div>
+
+#include("footer.html")
+
+</body>
+</html>

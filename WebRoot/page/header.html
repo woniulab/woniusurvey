@@ -1,0 +1,93 @@
+<script type="text/javascript" src="#(basePath)/library/js/bootbox.min.js"></script>
+<script>
+	// 将本函数放置于header文件中，这样可以给其它页面使用
+	function showAlert(headline, content) {
+		bootbox.alert({title: headline, message: content, className: 'mydialog', size: 'middle'});
+	}
+	
+	var chengduClass = ["36期班", "37期班", "38期班", "39期班", "40期班", "41期班", "42期班", "43期班", "44期班", "45期班", "46期班", "47期班", "48期班", "49期班", "50期班", "51期班", "52期班", "53期班", "54期班", "55期班"];
+	var chongqingClass = ["10期开发班", "10期测试班", "11期开发班", "11期测试班", "12期开发班", "12期测试班", "13期开发班", "13期测试班", "14期班", "15期班", "16期班", "17期班", "18期班", "19期班", "20期班", "21期班", "22期班", "23期班", "24期班", "25期班"];
+	var xianClass = ["4期班", "5期班", "6期班", "7期班", "8期班", "9期班", "10期班", "11期班", "12期班", "13期班", "14期班", "15期班", "16期班", "17期班", "18期班", "19期班", "20期班"];
+	var shanghaiClass = ["1期班", "2期班", "3期班", "4期班", "5期班", "6期班", "7期班", "8期班", "9期班", "10期班", "11期班", "12期班", "13期班", "14期班", "15期班"];
+	var globalClass = ["讲师调查", "销售调查", "就业调查", "市场调查", "其他调查"];
+	
+	window.onload = function() {
+		if (document.getElementById("classid") != null) {
+			#if(session != null && session.username == "chengdu")
+				var classes = chengduClass;
+			#elseif(session != null && session.username == "chongqing")
+				var classes = chongqingClass;
+			#elseif(session != null && session.username == "xian")
+				var classes = xianClass;
+			#elseif(session != null && session.username == "shanghai")
+				var classes = shanghaiClass;
+			#elseif(session != null && session.username == "admin")
+				var classes = globalClass;
+			#else
+				var classes = [];
+			#end
+			
+			$("#classid").empty();
+	        $("#classid").append(new Option("", ""));
+	        for (var i=0; i<classes.length; i++) {
+	        	$("#classid").append(new Option(classes[i], classes[i]));
+	        };
+		}
+	}
+	
+	function fillClass() {
+        switch ($("#branch").val()) {
+            case "成都":
+                var classes = chengduClass;
+                break;
+            case "重庆":
+                var classes = chongqingClass;
+                break;
+            case "西安":
+                var classes = xianClass;
+                break;
+            case "上海":
+                var classes = shanghaiClass;
+                break;
+            case "全国":
+            	var classes = globalClass;
+            	break;
+            default:
+            	var classes = [];
+           		break;
+        }
+        
+        $("#classid").empty();
+        $("#classid").append(new Option("", ""));
+        for (var i=0; i<classes.length; i++) {
+        	$("#classid").append(new Option(classes[i], classes[i]));
+        };
+    }
+	
+	function doLogout() {
+		$.post("#(basePath)/user/logout", "", function(data) {
+			  if (data == "logout-pass") {
+				  location.href = "#(basePath)";
+			  }
+			  else {
+				  showAlert("错误提示", "未知错误，请联系管理员.");
+			  }
+		});
+	}
+</script>
+
+<div class="navbar-default header">
+    <div class="container" style="padding: 0px">
+        <div class="row">
+            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6" style="margin: 10px 0px;">
+                <a href="#(basePath)/survey"><img src="#(basePath)/page/logo.png"  style="width: 220px; height: auto; max-width: 100%;"></a>
+            </div>
+            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 hidden-sm hidden-xs"  style="text-align: right; color: #F0F0F0;">
+                <h2>学员调查问卷系统</h2>
+            </div>
+            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 hidden-lg hidden-md"  style="text-align: right; color: #F0F0F0; margin: -5px; ">
+                <h3>问卷系统</h3>
+            </div>
+        </div>
+    </div>
+</div>

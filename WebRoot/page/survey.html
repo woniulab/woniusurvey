@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
+    <title>蜗牛问卷-#(survey.branch)校区-#(survey.classid)-#(survey.createtime)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="#(basePath)/library/css/bootstrap.min.css"/>
+    <link rel="stylesheet" type="text/css" href="#(basePath)/library/css/sitemain.css"/>
+    <script type="text/javascript" src="#(basePath)/library/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="#(basePath)/library/js/bootstrap.min.js"></script>
+    <style>
+    	div[onclick^="chooseAnswer"]:hover{
+    		background-color: #ddd;
+    		cursor: pointer;
+    	}
+    </style>
+    <script>
+    	function chooseAnswer(obj, type) {
+    		// 如果未选中答案，将题目行的背景修改为无背景，以消除提示
+    		$(obj).parent().children("div:eq(0)").css("background-color","");
+    		
+    		// 获取到对应的单选或复选框对象
+    		var target = $(obj).children("div:eq(2)").children("input:eq(0)");
+    		if (type == "单选题") {
+	    		$(obj).parent().children("input:radio").removeProp('checked');
+	    		target.prop('checked', 'true');
+    		}
+    		else if (type == "多选题") {
+    			if (target.is(':checked'))
+    				target.removeProp('checked');
+    			else
+    				target.prop('checked', 'true');
+    		}
+    	}
+    	
+    	function submitResult() {
+    		var answerObject = {};
+    		var isAnswered = true;		// 是否所有题目都输入或选择了答案
+    		
+    		$("div[id^='question-radio']").each(function(index,element){
+    			var value = $(element).find("input:radio:checked").val();
+    			if (typeof(value) == "undefined"){
+    				$(element).children("div:eq(0)").css("background-color", "orange");
+    				isAnswered = false;
+    			}
+    			var id = $(element).prop("id");
+    			answerObject[id] = value;
+    		});
+    		
+    		$("div[id^='question-checkbox']").each(function(){
+    			var id = $(this).prop("id");
+    			var temp = "";
+    			$(this).find("input:checkbox:checked").each(function(){
+    				temp += $(this).val()+ "##";     
+    			});
+    			if (temp == null || temp == ""){
+    				$(this).children("div:eq(0)").css("background-color", "orange");
+    				isAnswered = false;
+    			}
+    			answerObject[id] = temp;
+    		});
+    		
+    		$("div[id^='question-textarea']").each(function(){
+    			var id = $(this).prop("id");
+    			var value = $(this).find("textarea").val();
+    			if (value == null || value == ""){
+    				$(this).children("div:eq(0)").css("background-color", "orange");
+    				isAnswered = false;
+    			}
+    			value = $(this).find("textarea").prop("id").split("-")[1] + "##" + value;
+    			answerObject[id] = value;
+    		});
+    		
+    		if (isAnswered) {
+    			$.post("#(basePath)/result/add", "result="+JSON.stringify(answerObject), function(data) {
+    				if (data == "sumbit-successful") {
+    					location.href = "#(basePath)/result/done";
+    				}
+    				else {
+    					showAlert("错误提示", "本次问卷没有提交成功，请联系管理员.");
+    				}
+    			});
+    		}
+    	}
+    	
+    	function checkTextArea(obj) {
+    		if ($(obj).val() == null || $(obj).val() == "") {
+    			$(obj).parent().parent().parent().children("div:eq(0)").css("background-color", "orange");
+    		}
+    		else {
+    			$(obj).parent().parent().parent().children("div:eq(0)").css("background-color", "");
+    		}
+    	}
+    </script>
+</head>
+<body>
+
+#include("header.html")
+
+<div class="container">
+    <div class="row">
+        <!-- 问卷信息 -->
+        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="padding: 5px 0px 15px 0px; margin-bottom: 20px; background-color: whitesmoke; text-align: center;">
+       			<h3>#(survey.branch)校区-#(survey.classid)-#(survey.createtime)-调查问卷</h3>
+        </div>
+        <!-- 问卷信息 -->
+        
+        <!-- 题目信息 -->
+        #set(index1=1)
+        #for(question: questionList)
+	        #if(question.type == "单选题")
+	        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="padding: 20px; margin-bottom: 20px; background-color: whitesmoke;" id="question-radio-#(question.qid)">
+	        #elseif(question.type == "多选题")
+	        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="padding: 20px; margin-bottom: 20px; background-color: whitesmoke;" id="question-checkbox-#(question.qid)">
+	        #else
+	        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="padding: 20px; margin-bottom: 20px; background-color: whitesmoke;" id="question-textarea-#(question.qid)">
+	        #end
+        	<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="margin: 0; padding: 0">
+	        	<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2" style="text-align: center; font-weight: bold;">题目：#(index1++)</div>
+	        	<div class="col-lg-7 col-md-7 col-sm-7 col-xs-7" id="questiontitle-#(question.qid)">#(question.title)</div>
+	        	<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3" style="text-align: center;">
+	        		#(question.type)
+	        	</div>
+       		</div>
+       		<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="height: 20px; padding: 0px;">
+       			<hr style="background-color: #DDD; height: 1px; margin: 10px;"/>
+       		</div>
+       		
+       		#set(index2=1)
+       		#for(answer: question.answerList)
+	       		#if(answer.content=="#textarea#")
+	       		<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="margin: 0; padding: 5px;">
+	       			<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2" style="text-align: center;"></div>
+	       			<div class="col-lg-9 col-md-9 col-sm-9 col-xs-9">
+	       				<textarea style="width: 100%; height: 80px;" id="answer-#(answer.aid)" onfocus="checkTextArea(this)" onblur="checkTextArea(this)"></textarea>
+	       			</div>
+	       			<div class="col-lg-1 col-md-1 col-sm-1 col-xs-1"></div>
+	       		</div>
+	       		#else
+	       		<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="margin: 0; padding: 5px;" onclick="chooseAnswer(this, '#(question.type)')">
+	       			<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2" style="text-align: center;">#(index2++)</div>
+	       			<div class="col-lg-7 col-md-7 col-sm-7 col-xs-7">#(answer.content)</div>
+	       			<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3" style="text-align: center;">
+	       				#if(question.type == "单选题")
+	       					<input type="radio" name="questionanswer-#(answer.qid)" id="answer-#(answer.aid)" value="#(answer.aid)" />
+	       				#elseif(question.type == "多选题")
+	       					<input type="checkbox" name="questionanswer-#(answer.qid)" id="answer-#(answer.aid)" value="#(answer.aid)" style="width: 30px;"/>
+	       				#end
+		       		</div>
+	       		</div>
+	       		#end
+       		#end
+        </div>
+        #end
+        <!-- 题目信息 -->
+        
+        <!-- 提交问卷 -->
+        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="padding: 20px; background-color: whitesmoke;">
+        	<div class="col-lg-4 col-md-4 col-sm-2 col-xs-2"></div>
+        	<div class="col-lg-4 col-md-4 col-sm-8 col-xs-8">
+        		<button class="form-control btn-primary" onclick="submitResult()">&nbsp;<span class="glyphicon glyphicon-plus"></span>&nbsp;提交答案&nbsp;</button>
+        	</div>
+        	<div class="col-lg-4 col-md-4 col-sm-2 col-xs-2" style="text-align: right;"></div>
+       	</div>
+       	<!-- 提交问卷 -->
+    </div>
+</div>
+
+#include("footer.html")
+
+</body>
+</html>
